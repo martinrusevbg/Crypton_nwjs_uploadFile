@@ -1,0 +1,8 @@
+{
+  "generator-node-webkit": {
+    "nwjs": {
+      "version": "v0.12.0",
+      "platform": "Linux64"
+    }
+  }
+}

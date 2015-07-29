@@ -1,0 +1,12 @@
+	{
+	  "name": "crypton",
+	  "main": "./html/index.html",
+	  "single-instance": false,
+	  "window": {
+		"toolbar": true,
+		"show": true,
+		"icon": "./img/icon.png"
+	  },
+	  "dependencies": {
+	  }
+	}
