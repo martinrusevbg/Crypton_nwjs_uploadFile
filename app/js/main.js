@@ -13,9 +13,9 @@ function init(){
           return console.log(err);
         }
 
-        actions[action](username, passphrase, data, 'crypt');
+        var base64File = new Buffer(data, 'binary').toString('base64');
+        actions[action](username, passphrase, base64File.toString(), 'crypt');
 
-        //Test get file
         setTimeout(function(){
           getItem('crypt');
         }, 10000);
@@ -68,6 +68,7 @@ function getOrCreate(name, file) {
     if (err) {
       console.error(err);
     }
+    console.log(item)
     updateItem(name, file);
   });
 }
@@ -79,7 +80,7 @@ function updateItem(name, value) {
   }
 
   var item = app.session.items[name];
-  item.value = value;
+  item.value.name = value;
 
   item.save(function callback(err) {
     if (err) {
