@@ -13,8 +13,8 @@ function init(){
           return console.log(err);
         }
 
-        var base64File = new Buffer(data, 'binary').toString('base64');
-        actions[action](username, passphrase, base64File.toString(), 'crypt');
+        var base64File = new Buffer(data).toString('base64');
+        actions[action](username, passphrase, base64File, 'crypt');
 
         setTimeout(function(){
           getItem('crypt');
