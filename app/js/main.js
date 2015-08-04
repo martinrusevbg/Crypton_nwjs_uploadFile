@@ -13,12 +13,12 @@ function init(){
           return console.log(err);
         }
 
-        actions[action](username, passphrase, data, 'crypt');
+        var base64File = new Buffer(data).toString('base64');
+        actions[action](username, passphrase, base64File, 'crypt');
 
-        //Test get file
-        setTimeout(function(){
-          getItem('crypt');
-        }, 10000);
+        //setTimeout(function(){
+        //  getItem('crypt');
+        //}, 1000);
       });
     });
   });
@@ -61,6 +61,7 @@ actions.register = function (username, passphrase, callback) {
 
 function setStatus (status) {
   console.log(status);
+  $('#status').text(status);
 }
 
 function getOrCreate(name, file) {
@@ -68,6 +69,7 @@ function getOrCreate(name, file) {
     if (err) {
       console.error(err);
     }
+    //console.log(item)
     updateItem(name, file);
   });
 }
@@ -79,12 +81,14 @@ function updateItem(name, value) {
   }
 
   var item = app.session.items[name];
-  item.value = value;
+  item.value.name = value;
 
   item.save(function callback(err) {
     if (err) {
       console.error(err);
     }
+
+    $('#response').val(item.value);
   });
 }
 
@@ -93,9 +97,12 @@ function getItem(name) {
     if (err) {
       console.log(err);
     }
-    console.log(name);
+
+    //$('#response').val(name._value);
   });
 }
+
+
 
 var app = {
   session: null
