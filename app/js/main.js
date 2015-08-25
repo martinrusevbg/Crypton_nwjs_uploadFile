@@ -5,18 +5,25 @@ function init(){
     var fs = require('fs');
     var path = require('path');
     var http = require('http');
+    var ext;
 
     exports.chooseFile("#openFileDialog", function(filename){
       var username = 'martinrusev';
       var passphrase = 'test';
 
-      fs.readFile(filename, 'utf8', function (err, data) {
+      ext = path.extname(filename)
+
+      $('#textarea').val('');
+      $("#response").empty();
+
+      fs.readFile(filename, function (err, data) {
         if (err) {
+          $("#response").append('<div>error: '+err+'</div>');
           return console.log(err);
         }
 
-        var base64File = new Buffer(data).toString('base64');
-        testFileUpload(username, passphrase, 'test', base64File);
+        var base64File = new Buffer(data,'base64');
+        fileUpload(username, passphrase, 'test', base64File);
 
       });
     });
@@ -25,16 +32,18 @@ function init(){
     crypton.host = 'testapiservice.crypton.io';
     crypton.port = 443;
 
-    function testFileUpload(user, pass, fileName, fileData) {
+    function fileUpload(user, pass, fileName, fileData) {
 
       crypton.authorize(user, pass, function (err, session) {
         if (err) {
+          $("#response").append('<div>error: '+err+'</div>');
           return console.error(err);
         }
         app.session = session;
         app.session.getOrCreateItem(fileName, function (err, item) {
 
           if (err) {
+            $("#response").append('<div>error: '+err+'</div>');
             return console.error(err);
           }
 
@@ -43,6 +52,7 @@ function init(){
           app.session.items[fileName].value.fileData = fileData;
           app.session.items[fileName].save(function (err) {
             if (err) {
+              $("#response").append('<div>error: '+err+'</div>');
               console.log(err);
             }
             console.log('file saved!');
@@ -56,19 +66,24 @@ function init(){
       app.session.getOrCreateItem(name, function callback(err, name) {
         if (err) {
           console.log(err);
+          $("#response").append('<div>error: '+err+'</div>');
         }
-        console.log(name);
+
         var bitmap = new Buffer(name._value.fileData, 'base64');
-        var file = fs.writeFile('test.txt', bitmap);
-        $('#response').val(bitmap);
+        fs.writeFile('test'+ext, bitmap);
+
+        var filename = 'test'+ext;
+        $("#response").append('<div>download: <a href="../'+filename+'" download="'+filename+'" id="link">'+filename+'</a></div>');
+
+        $('#textarea').val(bitmap);
       });
     }
+
 
     var app = {
       session: null
     };
 
+
   });
 }
-
-

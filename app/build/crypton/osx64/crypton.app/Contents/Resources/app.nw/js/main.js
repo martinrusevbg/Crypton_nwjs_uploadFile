@@ -2,108 +2,88 @@ function init(){
   global.$(global.window.document).ready(function(){
     var exports = require("./../js/export.js");
 
+    var fs = require('fs');
+    var path = require('path');
+    var http = require('http');
+    var ext;
+
     exports.chooseFile("#openFileDialog", function(filename){
-      var action = 'authorize';
       var username = 'martinrusev';
       var passphrase = 'test';
 
-      var fs = require('fs');
-      fs.readFile(filename, 'utf8', function (err, data) {
+      ext = path.extname(filename)
+
+      $('#textarea').val('');
+      $("#response").empty();
+
+      fs.readFile(filename, function (err, data) {
         if (err) {
+          $("#response").append('<div>error: '+err+'</div>');
           return console.log(err);
         }
 
-        var base64File = new Buffer(data).toString('base64');
-        actions[action](username, passphrase, base64File, 'crypt');
+        var base64File = new Buffer(data,'base64');
+        fileUpload(username, passphrase, 'test', base64File);
 
-        //setTimeout(function(){
-        //  getItem('crypt');
-        //}, 1000);
       });
     });
-  });
-}
 
+    actions = {};
+    crypton.host = 'testapiservice.crypton.io';
+    crypton.port = 443;
 
-actions = {};
-crypton.host = 'testapiservice.crypton.io';
-crypton.port = 443;
+    function fileUpload(user, pass, fileName, fileData) {
 
-actions.authorize = function (username, passphrase, file, name) {
-  setStatus('authorizing...');
+      crypton.authorize(user, pass, function (err, session) {
+        if (err) {
+          $("#response").append('<div>error: '+err+'</div>');
+          return console.error(err);
+        }
+        app.session = session;
+        app.session.getOrCreateItem(fileName, function (err, item) {
 
-  crypton.authorize(username, passphrase, function (err, session) {
-    if (err) {
-      setStatus(err);
-      return;
+          if (err) {
+            $("#response").append('<div>error: '+err+'</div>');
+            return console.error(err);
+          }
+
+          app.myitem = item;
+          app.session.items[fileName].value.name = user;
+          app.session.items[fileName].value.fileData = fileData;
+          app.session.items[fileName].save(function (err) {
+            if (err) {
+              $("#response").append('<div>error: '+err+'</div>');
+              console.log(err);
+            }
+            console.log('file saved!');
+            getItem(fileName);
+          });
+        });
+      });
     }
 
-    app.session = session;
-    setStatus('logged in');
+    function getItem(name) {
+      app.session.getOrCreateItem(name, function callback(err, name) {
+        if (err) {
+          console.log(err);
+          $("#response").append('<div>error: '+err+'</div>');
+        }
 
-    getOrCreate(name, file);
-  });
-}
+        var bitmap = new Buffer(name._value.fileData, 'base64');
+        fs.writeFile('test'+ext, bitmap);
 
-actions.register = function (username, passphrase, callback) {
-  setStatus('generating account...');
+        var filename = 'test'+ext;
+        $("#response").append('<div>download: <a href="../'+filename+'" download="'+filename+'" id="link">'+filename+'</a></div>');
 
-  crypton.generateAccount(username, passphrase, function (err, account) {
-    if (err) {
-      setStatus(err);
-      return;
+        $('#textarea').val(bitmap);
+      });
     }
 
-    setStatus('account generated');
-    actions.authorize(username, passphrase);
+
+    var app = {
+      session: null
+    };
+
+
   });
 }
-
-function setStatus (status) {
-  console.log(status);
-  $('#status').text(status);
-}
-
-function getOrCreate(name, file) {
-  app.session.getOrCreateItem(name, function _callback(err, item) {
-    if (err) {
-      console.error(err);
-    }
-    //console.log(item)
-    updateItem(name, file);
-  });
-}
-
-function updateItem(name, value) {
-  if (!app.session.items[name]) {
-    console.log('Item not found');
-    return;
-  }
-
-  var item = app.session.items[name];
-  item.value.name = value;
-
-  item.save(function callback(err) {
-    if (err) {
-      console.error(err);
-    }
-
-    $('#response').val(item.value);
-  });
-}
-
-function getItem(name) {
-  app.session.getOrCreateItem(name, function callback(err, name) {
-    if (err) {
-      console.log(err);
-    }
-
-    //$('#response').val(name._value);
-  });
-}
-
-
-
-var app = {
-  session: null
-};
